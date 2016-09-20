@@ -1,18 +1,28 @@
 <html>
 <meta charset="utf-8">
 <title>Light Sensor</title>
- 
-<body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<link href="nouislider.min.css" rel="stylesheet">
+<script src="nouislider.js"></script>
 
+
+<body>
+<style type="text/css">
+	#canvas {
+		margin: 2em;
+	}
+</style>
+ 
+<canvas id="canvas"></canvas>
 <script type="text/javascript">
 var colors = [50, 100, 150, 200, 220, 40, 80, 170, 50, 30, 60, 230, 210, 180, 30, 80];
-canvas = document.createElement('canvas'),
-ctx = canvas.getContext('2d');
+var multiplierSelector;
+var canvas = document.getElementById("canvas");
+var ctx = canvas.getContext("2d");
 canvas.style.border = "solid 1px black"
 canvas.width = 200;
 canvas.height = 200;
-document.body.appendChild(document.createElement('br'));
-document.body.appendChild(canvas);
+ 
 
 ctx.shadowOffsetX = 1000; // (default 0)
 ctx.shadowOffsetY = 1000; // (default 0)
@@ -85,6 +95,55 @@ for (i = 0; i < 18; i++){
 		console.log("x axis is " + (25 + (50*((i-2)%4))) + " and y axis is " + (yAxis+ (50*(Math.floor((i-2)/4)-1))));
 	}
 }
+
+</script>
+
+<style type="text/css">
+#lower-value {
+	width: 100%;
+	float: left;
+	display: block;
+	text-align: center;
+	margin: 3em;
+}
+
+#nonlinear {
+	width: 300px;
+	margin: 30px;
+}
+</style>
+
+<div id="nonlinear" >
+	<span id = "lower-value"></span>
+</div>
+
+
+
+<script type="text/javascript">
+var nonLinearStepSlider = document.getElementById('nonlinear');
+
+noUiSlider.create(nonLinearStepSlider, {
+	start: 0,
+	range: {
+		'min': 0,
+		'50%': 1,
+		'70%': 2,
+		'max': 10
+	}
+});	
+
+ 
+var lowerValue = document.getElementById('lower-value'),
+	handles = nonLinearStepSlider.getElementsByClassName('noUi-handle');
+
+// Display the slider value and how far the handle moved
+// from the left edge of the slider.
+nonLinearStepSlider.noUiSlider.on('update', function ( values, handle ) {
+	lowerValue.innerHTML = values[handle] ;
+
+
+
+});
 
 </script>
 
