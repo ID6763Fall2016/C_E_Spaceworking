@@ -1,0 +1,91 @@
+<html>
+<meta charset="utf-8">
+<title>Light Sensor</title>
+ 
+<body>
+
+<script type="text/javascript">
+var colors = [50, 100, 150, 200, 220, 40, 80, 170, 50, 30, 60, 230, 210, 180, 30, 80];
+canvas = document.createElement('canvas'),
+ctx = canvas.getContext('2d');
+canvas.style.border = "solid 1px black"
+canvas.width = 200;
+canvas.height = 200;
+document.body.appendChild(document.createElement('br'));
+document.body.appendChild(canvas);
+
+ctx.shadowOffsetX = 1000; // (default 0)
+ctx.shadowOffsetY = 1000; // (default 0)
+ctx.shadowBlur = 20; // (default 0)
+
+var xAxis = 0;
+var yAxis = 25;
+ 
+for (i = 0; i < 18; i++){	
+	if (0 <= i && i < 4){
+		ctx.shadowColor = 'rgba(' + colors[i] + ',' + colors[i] + ',' + colors[i] +',' + '1)'; 
+		ctx.fillStyle =  'rgba(' + colors[i] + ',' + colors[i] + ',' + colors[i] +',' + '0.5)';
+		ctx.beginPath();
+	  	ctx.arc(xAxis + 50*(i%4) - 1000,  yAxis- 1000, 30, 0, Math.PI * 2, true );
+	  	ctx.closePath();
+	  	ctx.fill();
+	  	console.log('rgba(' + colors[i] + ',' + colors[i] + ',' + colors[i] +',' + '0.5)');
+	  	console.log("keep increase x: " + i);
+	  	console.log("x axis is " + (xAxis + 50*(i%4)) + " and y axis is " + yAxis);
+	} else if (i == 4){
+		ctx.shadowColor = 'rgba(' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] +',' + '1)';
+		ctx.fillStyle =  'rgba(' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] +',' + '0.5)';
+		ctx.beginPath();
+	  	ctx.arc(xAxis + 50*4  - 1000, yAxis + (50*(Math.floor(i/4)-1)) - 1000, 30, 0, Math.PI * 2, true );
+	  	ctx.closePath();
+	  	ctx.fill();
+	  	console.log('rgba(' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] +',' + '0.5)');
+		console.log("return to the first element of the row: " + (i-3)); 
+		console.log("x axis is " + (xAxis+ 50*4) + " and y axis is " + (yAxis+ (50*(Math.floor(i/4)-1))));
+	} else if (5 <= i && i <= 8) {
+		ctx.shadowColor ='rgba(' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] +',' + '1)';
+		ctx.fillStyle =  'rgba(' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] +',' + '0.5)';
+		ctx.beginPath();
+	  	ctx.arc(25 + 50*((i-1)%4)  - 1000, yAxis + (50*(Math.floor((i-1)/4))) - 1000, 30, 0, Math.PI * 2, true );
+	  	ctx.closePath();
+	  	ctx.fill();
+	  	console.log('rgba(' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] +',' + '0.5)');
+		console.log("keep increase x: " + i); 
+		console.log("current multiplier for x is " + ((i-1)%4) + " and for y is " +(Math.floor((i-1)/4)));
+		console.log("x axis is " + (25 + 50*((i-1)%4)) + " and y axis is " + (yAxis+ 50*(Math.floor((i-1)/4))));
+	}  else if (8 < i && i < 13){
+		ctx.shadowColor = 'rgba(' + colors[(i-1)]  + ',' + colors[(i-1)]  + ',' + colors[(i-1)]  +',' + '1)';
+		ctx.fillStyle =  'rgba(' + colors[(i-1)]  + ',' + colors[(i-1)]  + ',' + colors[(i-1)]  +',' + '0.5)';
+		ctx.beginPath();
+	  	ctx.arc(xAxis + (50*((i-1)%4)) - 1000, yAxis + (50*(Math.floor((i-1)/4))) - 1000, 30, 0, Math.PI * 2, true );
+	  	ctx.closePath();
+	  	ctx.fill();
+	  	console.log('rgba(' + colors[(i-1)]  + ',' + colors[(i-1)]  + ',' + colors[(i-1)]  +',' + '0.5)');
+		console.log("keep increase x: " + i); 
+		console.log("x axis is " + (50*((i-1)%4)) + " and y axis is " + (yAxis+ 50*(Math.floor((i-1)/4))));
+	} else if (i == 13) {
+		ctx.shadowColor = 'rgba(' + colors[(i-1)]  + ',' + colors[(i-1)]  + ',' + colors[(i-1)]  +',' + '1)';; 
+		ctx.fillStyle =  'rgba(' + colors[(i-1)]  + ',' + colors[(i-1)]  + ',' + colors[(i-1)]  +',' + '0.5)';;
+		ctx.beginPath();
+	  	ctx.arc(xAxis + 50*4  - 1000, yAxis + (50*(Math.floor(i/4)-1)) - 1000, 30, 0, Math.PI * 2, true );
+	  	ctx.closePath();
+	  	ctx.fill();
+	  	console.log('rgba(' + colors[(i-1)]  + ',' + colors[(i-1)]  + ',' + colors[(i-1)]  +',' + '0.5)');
+		console.log("return to the first element of the row: " + (i-3)); 
+		console.log("x axis is " + (xAxis+ 50*4) + " and y axis is " + (yAxis+ (50*(Math.floor(i/4)-1))));
+	} else {
+		ctx.shadowColor = 'rgba(' + colors[(i-2)]  + ',' + colors[(i-2)]  + ',' + colors[(i-2)]  +',' + '1)'; 
+		ctx.fillStyle =  'rgba(' + colors[(i-2)]  + ',' + colors[(i-2)]  + ',' + colors[(i-2)]  +',' + '0.5)';
+		ctx.beginPath();
+	  	ctx.arc((25 + (50*((i-2)%4))) - 1000, yAxis + (50*(Math.floor((i-2)/4))) - 1000, 30, 0, Math.PI * 2, true );
+	  	ctx.closePath();
+	  	ctx.fill();
+	  	console.log('rgba(' + colors[(i-2)]  + ',' + colors[(i-2)]  + ',' + colors[(i-2)]  +',' + '0.5)');
+		console.log("keep increase x: " + i); 
+		console.log("x axis is " + (25 + (50*((i-2)%4))) + " and y axis is " + (yAxis+ (50*(Math.floor((i-2)/4)-1))));
+	}
+}
+
+</script>
+
+</body>
