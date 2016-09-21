@@ -14,89 +14,7 @@
 </style>
  
 <canvas id="canvas"></canvas>
-<script type="text/javascript">
-var colors = [50, 100, 150, 200, 220, 40, 80, 170, 50, 30, 60, 230, 210, 180, 30, 80];
-var multiplierSelector;
-var canvas = document.getElementById("canvas");
-var ctx = canvas.getContext("2d");
-canvas.style.border = "solid 1px black"
-canvas.width = 200;
-canvas.height = 200;
  
-
-ctx.shadowOffsetX = 1000; // (default 0)
-ctx.shadowOffsetY = 1000; // (default 0)
-ctx.shadowBlur = 20; // (default 0)
-
-var xAxis = 0;
-var yAxis = 25;
- 
-for (i = 0; i < 18; i++){	
-	if (0 <= i && i < 4){
-		ctx.shadowColor = 'rgba(' + colors[i] + ',' + colors[i] + ',' + colors[i] +',' + '1)'; 
-		ctx.fillStyle =  'rgba(' + colors[i] + ',' + colors[i] + ',' + colors[i] +',' + '0.5)';
-		ctx.beginPath();
-	  	ctx.arc(xAxis + 50*(i%4) - 1000,  yAxis- 1000, 30, 0, Math.PI * 2, true );
-	  	ctx.closePath();
-	  	ctx.fill();
-	  	console.log('rgba(' + colors[i] + ',' + colors[i] + ',' + colors[i] +',' + '0.5)');
-	  	console.log("keep increase x: " + i);
-	  	console.log("x axis is " + (xAxis + 50*(i%4)) + " and y axis is " + yAxis);
-	} else if (i == 4){
-		ctx.shadowColor = 'rgba(' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] +',' + '1)';
-		ctx.fillStyle =  'rgba(' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] +',' + '0.5)';
-		ctx.beginPath();
-	  	ctx.arc(xAxis + 50*4  - 1000, yAxis + (50*(Math.floor(i/4)-1)) - 1000, 30, 0, Math.PI * 2, true );
-	  	ctx.closePath();
-	  	ctx.fill();
-	  	console.log('rgba(' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] +',' + '0.5)');
-		console.log("return to the first element of the row: " + (i-3)); 
-		console.log("x axis is " + (xAxis+ 50*4) + " and y axis is " + (yAxis+ (50*(Math.floor(i/4)-1))));
-	} else if (5 <= i && i <= 8) {
-		ctx.shadowColor ='rgba(' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] +',' + '1)';
-		ctx.fillStyle =  'rgba(' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] +',' + '0.5)';
-		ctx.beginPath();
-	  	ctx.arc(25 + 50*((i-1)%4)  - 1000, yAxis + (50*(Math.floor((i-1)/4))) - 1000, 30, 0, Math.PI * 2, true );
-	  	ctx.closePath();
-	  	ctx.fill();
-	  	console.log('rgba(' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] +',' + '0.5)');
-		console.log("keep increase x: " + i); 
-		console.log("current multiplier for x is " + ((i-1)%4) + " and for y is " +(Math.floor((i-1)/4)));
-		console.log("x axis is " + (25 + 50*((i-1)%4)) + " and y axis is " + (yAxis+ 50*(Math.floor((i-1)/4))));
-	}  else if (8 < i && i < 13){
-		ctx.shadowColor = 'rgba(' + colors[(i-1)]  + ',' + colors[(i-1)]  + ',' + colors[(i-1)]  +',' + '1)';
-		ctx.fillStyle =  'rgba(' + colors[(i-1)]  + ',' + colors[(i-1)]  + ',' + colors[(i-1)]  +',' + '0.5)';
-		ctx.beginPath();
-	  	ctx.arc(xAxis + (50*((i-1)%4)) - 1000, yAxis + (50*(Math.floor((i-1)/4))) - 1000, 30, 0, Math.PI * 2, true );
-	  	ctx.closePath();
-	  	ctx.fill();
-	  	console.log('rgba(' + colors[(i-1)]  + ',' + colors[(i-1)]  + ',' + colors[(i-1)]  +',' + '0.5)');
-		console.log("keep increase x: " + i); 
-		console.log("x axis is " + (50*((i-1)%4)) + " and y axis is " + (yAxis+ 50*(Math.floor((i-1)/4))));
-	} else if (i == 13) {
-		ctx.shadowColor = 'rgba(' + colors[(i-1)]  + ',' + colors[(i-1)]  + ',' + colors[(i-1)]  +',' + '1)';; 
-		ctx.fillStyle =  'rgba(' + colors[(i-1)]  + ',' + colors[(i-1)]  + ',' + colors[(i-1)]  +',' + '0.5)';;
-		ctx.beginPath();
-	  	ctx.arc(xAxis + 50*4  - 1000, yAxis + (50*(Math.floor(i/4)-1)) - 1000, 30, 0, Math.PI * 2, true );
-	  	ctx.closePath();
-	  	ctx.fill();
-	  	console.log('rgba(' + colors[(i-1)]  + ',' + colors[(i-1)]  + ',' + colors[(i-1)]  +',' + '0.5)');
-		console.log("return to the first element of the row: " + (i-3)); 
-		console.log("x axis is " + (xAxis+ 50*4) + " and y axis is " + (yAxis+ (50*(Math.floor(i/4)-1))));
-	} else {
-		ctx.shadowColor = 'rgba(' + colors[(i-2)]  + ',' + colors[(i-2)]  + ',' + colors[(i-2)]  +',' + '1)'; 
-		ctx.fillStyle =  'rgba(' + colors[(i-2)]  + ',' + colors[(i-2)]  + ',' + colors[(i-2)]  +',' + '0.5)';
-		ctx.beginPath();
-	  	ctx.arc((25 + (50*((i-2)%4))) - 1000, yAxis + (50*(Math.floor((i-2)/4))) - 1000, 30, 0, Math.PI * 2, true );
-	  	ctx.closePath();
-	  	ctx.fill();
-	  	console.log('rgba(' + colors[(i-2)]  + ',' + colors[(i-2)]  + ',' + colors[(i-2)]  +',' + '0.5)');
-		console.log("keep increase x: " + i); 
-		console.log("x axis is " + (25 + (50*((i-2)%4))) + " and y axis is " + (yAxis+ (50*(Math.floor((i-2)/4)-1))));
-	}
-}
-
-</script>
 
 <style type="text/css">
 #lower-value {
@@ -123,7 +41,7 @@ for (i = 0; i < 18; i++){
 var nonLinearStepSlider = document.getElementById('nonlinear');
 
 noUiSlider.create(nonLinearStepSlider, {
-	start: 0,
+	start: 1,
 	range: {
 		'min': 0,
 		'50%': 1,
@@ -135,12 +53,91 @@ noUiSlider.create(nonLinearStepSlider, {
  
 var lowerValue = document.getElementById('lower-value'),
 	handles = nonLinearStepSlider.getElementsByClassName('noUi-handle');
-
-// Display the slider value and how far the handle moved
-// from the left edge of the slider.
+ 
 nonLinearStepSlider.noUiSlider.on('update', function ( values, handle ) {
-	lowerValue.innerHTML = values[handle] ;
 
+lowerValue.innerHTML = values[handle] ;
+var colors = [50, 100, 150, 200, 220, 40, 80, 170, 50, 30, 60, 230, 210, 180, 30, 80];
+var multiplierSelector = values[handle];
+console.log("multiplier is " + multiplierSelector);
+var canvas = document.getElementById("canvas");
+var ctx = canvas.getContext("2d");
+canvas.style.border = "solid 1px black"
+canvas.width = 200;
+canvas.height = 200;
+ 
+
+ctx.shadowOffsetX = 1000; // (default 0)
+ctx.shadowOffsetY = 1000; // (default 0)
+ctx.shadowBlur = 20; // (default 0)
+
+var xAxis = 0;
+var yAxis = 25;
+ 
+for (i = 0; i < 18; i++){	
+	if (0 <= i && i < 4){
+		ctx.shadowColor = 'rgba(' + colors[i]*multiplierSelector + ',' + colors[i]*multiplierSelector + ',' + colors[i]*multiplierSelector +',' + '1)'; 
+		ctx.fillStyle =  'rgba(' + colors[i]*multiplierSelector + ',' + colors[i]*multiplierSelector + ',' + colors[i]*multiplierSelector +',' + '0.5)';
+		ctx.beginPath();
+	  	ctx.arc(xAxis + 50*(i%4) - 1000,  yAxis- 1000, 30, 0, Math.PI * 2, true );
+	  	ctx.closePath();
+	  	ctx.fill();
+	  	//console.log('rgba(' + colors[i] + ',' + colors[i] + ',' + colors[i] +',' + '0.5)');
+	  	//console.log("keep increase x: " + i);
+	  	//console.log("x axis is " + (xAxis + 50*(i%4)) + " and y axis is " + yAxis);
+	} else if (i == 4){
+		ctx.shadowColor = 'rgba(' + colors[(i-Math.floor(i/4))]*multiplierSelector + ',' + colors[(i-Math.floor(i/4))]*multiplierSelector + ',' + colors[(i-Math.floor(i/4))]*multiplierSelector +',' + '1)';
+		ctx.fillStyle =  'rgba(' + colors[(i-Math.floor(i/4))]*multiplierSelector + ',' + colors[(i-Math.floor(i/4))]*multiplierSelector + ',' + colors[(i-Math.floor(i/4))]*multiplierSelector +',' + '0.5)';
+		ctx.beginPath();
+	  	ctx.arc(xAxis + 50*4  - 1000, yAxis + (50*(Math.floor(i/4)-1)) - 1000, 30, 0, Math.PI * 2, true );
+	  	ctx.closePath();
+	  	ctx.fill();
+	  	//console.log('rgba(' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] +',' + '0.5)');
+		//console.log("return to the first element of the row: " + (i-3)); 
+		//console.log("x axis is " + (xAxis+ 50*4) + " and y axis is " + (yAxis+ (50*(Math.floor(i/4)-1))));
+	} else if (5 <= i && i <= 8) {
+		ctx.shadowColor ='rgba(' + colors[(i-Math.floor(i/4))]*multiplierSelector + ',' + colors[(i-Math.floor(i/4))]*multiplierSelector + ',' + colors[(i-Math.floor(i/4))]*multiplierSelector +',' + '1)';
+		ctx.fillStyle =  'rgba(' + colors[(i-Math.floor(i/4))]*multiplierSelector + ',' + colors[(i-Math.floor(i/4))]*multiplierSelector + ',' + colors[(i-Math.floor(i/4))]*multiplierSelector +',' + '0.5)';
+		ctx.beginPath();
+	  	ctx.arc(25 + 50*((i-1)%4)  - 1000, yAxis + (50*(Math.floor((i-1)/4))) - 1000, 30, 0, Math.PI * 2, true );
+	  	ctx.closePath();
+	  	ctx.fill();
+	  	//console.log('rgba(' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] + ',' + colors[(i-Math.floor(i/4))] +',' + '0.5)');
+		//console.log("keep increase x: " + i); 
+		//console.log("current multiplier for x is " + ((i-1)%4) + " and for y is " +(Math.floor((i-1)/4)));
+		//console.log("x axis is " + (25 + 50*((i-1)%4)) + " and y axis is " + (yAxis+ 50*(Math.floor((i-1)/4))));
+	}  else if (8 < i && i < 13){
+		ctx.shadowColor = 'rgba(' + colors[(i-1)]*multiplierSelector  + ',' + colors[(i-1)]*multiplierSelector  + ',' + colors[(i-1)]*multiplierSelector  +',' + '1)';
+		ctx.fillStyle =  'rgba(' + colors[(i-1)]*multiplierSelector  + ',' + colors[(i-1)]*multiplierSelector  + ',' + colors[(i-1)]*multiplierSelector  +',' + '0.5)';
+		ctx.beginPath();
+	  	ctx.arc(xAxis + (50*((i-1)%4)) - 1000, yAxis + (50*(Math.floor((i-1)/4))) - 1000, 30, 0, Math.PI * 2, true );
+	  	ctx.closePath();
+	  	ctx.fill();
+	  	//console.log('rgba(' + colors[(i-1)]  + ',' + colors[(i-1)]  + ',' + colors[(i-1)]  +',' + '0.5)');
+		//console.log("keep increase x: " + i); 
+		//console.log("x axis is " + (50*((i-1)%4)) + " and y axis is " + (yAxis+ 50*(Math.floor((i-1)/4))));
+	} else if (i == 13) {
+		ctx.shadowColor = 'rgba(' + colors[(i-1)]*multiplierSelector  + ',' + colors[(i-1)]*multiplierSelector  + ',' + colors[(i-1)]*multiplierSelector  +',' + '1)';; 
+		ctx.fillStyle =  'rgba(' + colors[(i-1)]*multiplierSelector  + ',' + colors[(i-1)]*multiplierSelector  + ',' + colors[(i-1)]*multiplierSelector  +',' + '0.5)';;
+		ctx.beginPath();
+	  	ctx.arc(xAxis + 50*4  - 1000, yAxis + (50*(Math.floor(i/4)-1)) - 1000, 30, 0, Math.PI * 2, true );
+	  	ctx.closePath();
+	  	ctx.fill();
+	  	//console.log('rgba(' + colors[(i-1)]  + ',' + colors[(i-1)]  + ',' + colors[(i-1)]  +',' + '0.5)');
+		//console.log("return to the first element of the row: " + (i-3)); 
+		//console.log("x axis is " + (xAxis+ 50*4) + " and y axis is " + (yAxis+ (50*(Math.floor(i/4)-1))));
+	} else {
+		ctx.shadowColor = 'rgba(' + colors[(i-2)]*multiplierSelector  + ',' + colors[(i-2)]*multiplierSelector  + ',' + colors[(i-2)]*multiplierSelector +',' + '1)'; 
+		ctx.fillStyle =  'rgba(' + colors[(i-2)]*multiplierSelector  + ',' + colors[(i-2)]*multiplierSelector + ',' + colors[(i-2)]*multiplierSelector  +',' + '0.5)';
+		ctx.beginPath();
+	  	ctx.arc((25 + (50*((i-2)%4))) - 1000, yAxis + (50*(Math.floor((i-2)/4))) - 1000, 30, 0, Math.PI * 2, true );
+	  	ctx.closePath();
+	  	ctx.fill();
+	  	//console.log('rgba(' + colors[(i-2)]  + ',' + colors[(i-2)]  + ',' + colors[(i-2)]  +',' + '0.5)');
+		//console.log("keep increase x: " + i); 
+		//console.log("x axis is " + (25 + (50*((i-2)%4))) + " and y axis is " + (yAxis+ (50*(Math.floor((i-2)/4)-1))));
+	}
+}
 
 
 });
