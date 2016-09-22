@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>360 degree light Probe</title>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+	<canvas width="512" height="256" id="myCanvas"></canvas>
+	<h1>last 64 light samples over time</h1>
+		<div style="width: 50%">
+		<canvas id="tingoChart" height="300" width="512"></canvas>
+		</div>
+
+</body>
+	<script>
+	
+		window.onload = function(){
+			initLineChart();
+		}
+		
+		var myBrightness = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+		
+		var socket = io();
+		
+		socket.on('messageFromServerToClient', function(incomingData) {
+			console.log(incomingData);
+			
+			myBrightness = incomingData;
+			socket.emit('messageFromClientToServer', "received: "+incomingData);
+			
+			redrawCanvas();
+		})
+		
+		
+		var brushCanvas = document.getElementById("myCanvas");
+		var brushSize = 64;
+		var brushBlurSize = 128;
+
+		// set brush size
+
+		var r = brushSize + brushBlurSize;
+		var d = r * 2;
+		
+		var ctx = brushCanvas.getContext('2d');
+
+		var i;
+		
+		ctx.beginPath();
+		ctx.rect(0,0, 512, 256);
+		ctx.fillStyle = "black";
+		ctx.fill();
+		
+		function redrawCanvas(){
+			for(i=0; i<4; i++) {
+					var gradColor = myBrightness[i];
+					//ctx.shadowColor = "rgb("+ grad +", " + grad + ", " + grad +")";
+					var myYloc = 0 + 32;
+					var myXloc = i * 128;
+					
+					var grd = ctx.createRadialGradient(myXloc, myYloc, 1, myXloc, myYloc, brushBlurSize);
+					grd.addColorStop(0,"rgba("+ gradColor +", " + gradColor + ", " + gradColor +", " + "256)");
+					grd.addColorStop(1,"rgba("+ gradColor +", " + gradColor + ", " + gradColor +", " + "0)");
+
+					// Fill with gradient
+					ctx.fillStyle=grd;
+
+					// draw circle in the left to the canvas
+					
+					ctx.beginPath();
+					ctx.arc(myXloc, r, d, myYloc, Math.PI * 2, true);
+					ctx.closePath();
+
+					ctx.fill();
+				}
+				
+				for(i=0; i<4; i++) {
+					var gradColor = myBrightness[4+i];
+					//ctx.shadowColor = "rgb("+ grad +", " + grad + ", " + grad +")";
+					var myYloc = 64 + 32;
+					var myXloc = i * 128 + 64;
+					
+					var grd = ctx.createRadialGradient(myXloc, myYloc, 1, myXloc, myYloc, brushBlurSize);
+					grd.addColorStop(0,"rgba("+ gradColor +", " + gradColor + ", " + gradColor +", " + "256)");
+					grd.addColorStop(1,"rgba("+ gradColor +", " + gradColor + ", " + gradColor +", " + "0)");
+
+					// Fill with gradient
+					ctx.fillStyle=grd;
+
+					// draw circle in the left to the canvas
+					
+					ctx.beginPath();
+					ctx.arc(myXloc, r, d, myYloc, Math.PI * 2, true);
+					ctx.closePath();
+
+					ctx.fill();
+				}
+				
+				for(i=0; i<4; i++) {
+					var gradColor = myBrightness[8+i];
+					//ctx.shadowColor = "rgb("+ grad +", " + grad + ", " + grad +")";
+					var myYloc = 128 + 32;
+					var myXloc = i * 128;
+					
+					var grd = ctx.createRadialGradient(myXloc, myYloc, 1, myXloc, myYloc, brushBlurSize);
+					grd.addColorStop(0,"rgba("+ gradColor +", " + gradColor + ", " + gradColor +", " + "256)");
+					grd.addColorStop(1,"rgba("+ gradColor +", " + gradColor + ", " + gradColor +", " + "0)");
+
+					// Fill with gradient
+					ctx.fillStyle=grd;
+
+					// draw circle in the left to the canvas
+					
+					ctx.beginPath();
+					ctx.arc(myXloc, r, d, myYloc, Math.PI * 2, true);
+					ctx.closePath();
+
+					ctx.fill();
+				}
+				
+				for(i=0; i<4; i++) {
+					var gradColor = myBrightness[12+i];
+					//ctx.shadowColor = "rgb("+ grad +", " + grad + ", " + grad +")";
+					var myYloc = 192 + 32;
+					var myXloc = i * 128 + 64;
+					
+					var grd = ctx.createRadialGradient(myXloc, myYloc, 1, myXloc, myYloc, brushBlurSize);
+					grd.addColorStop(0,"rgba("+ gradColor +", " + gradColor + ", " + gradColor +", " + "256)");
+					grd.addColorStop(1,"rgba("+ gradColor +", " + gradColor + ", " + gradColor +", " + "0)");
+
+					// Fill with gradient
+					ctx.fillStyle=grd;
+
+					// draw circle in the left to the canvas
+					
+					ctx.beginPath();
+					ctx.arc(myXloc, r, d, myYloc, Math.PI * 2, true);
+					ctx.closePath();
+
+					ctx.fill();
+				}
+		}
+		
+		var lineChartData = {
+			labels: Array(64).fill(0),
+			datasets: [
+			{
+			label: "Light Samples over Time",
+			fillColor: "rgba(220,220,220,0.2)",
+			strokeColor: "rgba(220,220,220,1)",
+			pointColor: "rgba(220,220,220,1)",
+			pointStrokeColor: "#fff",
+			pointHighlightFill: "#fff",
+			pointHightlightStroke: "rgba(220,220,220,1)",
+			data: Array(64).fill(0)
+			}
+			]
+			}
+		
+		socket.on('latestSamples', function(incomingData){
+			console.log(incomingData);
+			socket.emit('messageFromClientToServer', "received: "+incomingData);
+			lineChartData.datasets[0].data = incomingData;
+			initLineChart();
+		});
+		
+		var initLineChart = function() {
+			var options = {
+				animation : false,
+				responsive : true
+			};
+			var canvas = document.getElementById("tingoChart");
+			var ctx = canvas.getContext("2d");
+			window.myLineChart = new Chart(ctx).Line(lineChartData, options );
+		}
+		
+		
+
+		
+		
+	</script>
+</html>
