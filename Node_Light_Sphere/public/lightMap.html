@@ -99,7 +99,7 @@
 		
 		function redrawCanvas(){
 			for(i=0; i<4; i++) {
-					var gradColor = myBrightness[i]*multiplierSelector;
+					var gradColor =  Math.round(myBrightness[i]*multiplierSelector);
 					//ctx.shadowColor = "rgb("+ grad +", " + grad + ", " + grad +")";
 					var myYloc = 0 + 32;
 					var myXloc = i * 128;
@@ -121,7 +121,7 @@
 				}
 				
 				for(i=0; i<4; i++) {
-					var gradColor = myBrightness[4+i]*multiplierSelector;
+					var gradColor =  Math.round(myBrightness[4+i]*multiplierSelector);
 					//ctx.shadowColor = "rgb("+ grad +", " + grad + ", " + grad +")";
 					var myYloc = 64 + 32;
 					var myXloc = i * 128 + 64;
@@ -143,7 +143,7 @@
 				}
 				
 				for(i=0; i<4; i++) {
-					var gradColor = myBrightness[8+i]*multiplierSelector;
+					var gradColor =  Math.round(myBrightness[8+i]*multiplierSelector);
 					//ctx.shadowColor = "rgb("+ grad +", " + grad + ", " + grad +")";
 					var myYloc = 128 + 32;
 					var myXloc = i * 128;
@@ -165,7 +165,7 @@
 				}
 				
 				for(i=0; i<4; i++) {
-					var gradColor = myBrightness[12+i]*multiplierSelector;
+					var gradColor =  Math.round(myBrightness[12+i]*multiplierSelector);
 					//ctx.shadowColor = "rgb("+ grad +", " + grad + ", " + grad +")";
 					var myYloc = 192 + 32;
 					var myXloc = i * 128 + 64;
