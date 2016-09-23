@@ -5,13 +5,45 @@
 	<title>360 degree light Probe</title>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.js"></script>
 	<script src="/socket.io/socket.io.js"></script>
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/8.5.1/nouislider.min.css" rel="stylesheet" type="text/css" >
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/8.5.1/nouislider.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<script src="https://code.highcharts.com/highcharts.js"></script>
+
+	<script src="https://code.highcharts.com/modules/exporting.js"></script>
 </head>
 <body>
 	<canvas width="512" height="256" id="myCanvas"></canvas>
+	<div id="nonlinear" >  
+		<span id = "lower-value"></span>
+	</div>
+
+	<style type="text/css">
+		#lower-value {
+			width: 100%;
+			float: right;
+			display: block;
+			text-align: center;
+			margin: 3em;
+		}
+
+		#nonlinear {
+			width: 300px;
+			margin: 30px;
+		}
+
+		#lower-value:before {
+		    content: "Value: ";
+		    font: 700 12px;
+		}
+	</style>
+
 	<h1>last 64 light samples over time</h1>
-		<div style="width: 50%">
-		<canvas id="tingoChart" height="300" width="512"></canvas>
-		</div>
+	<div style="width: 50%">
+	<canvas id="tingoChart" height="300" width="512"></canvas>
+	</div>
+
+	<div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
 
 </body>
 	<script>
@@ -23,13 +55,32 @@
 		var myBrightness = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 		
 		var socket = io();
+
+		var nonLinearStepSlider = document.getElementById('nonlinear');
+		var multiplierSelector = 1;
+		
+		noUiSlider.create(nonLinearStepSlider, {
+			start: 1,
+			range: {
+				'min': 0,
+				'50%': 1,
+				'70%': 2,
+				'max': 10
+			}
+		});		
+
+		var lowerValue = document.getElementById('lower-value'),
+			handles = nonLinearStepSlider.getElementsByClassName('noUi-handle');
+	 
 		
 		socket.on('messageFromServerToClient', function(incomingData) {
-			console.log(incomingData);
-			
+			console.log(incomingData);		
 			myBrightness = incomingData;
-			socket.emit('messageFromClientToServer', "received: "+incomingData);
-			
+			socket.emit('messageFromClientToServer', "received: "+incomingData);	
+			nonLinearStepSlider.noUiSlider.on('update', function ( values, handle ) {
+				lowerValue.innerHTML = values[handle] ;
+				multiplierSelector = values[handle];	
+			});	
 			redrawCanvas();
 		})
 		
@@ -54,7 +105,7 @@
 		
 		function redrawCanvas(){
 			for(i=0; i<4; i++) {
-					var gradColor = myBrightness[i];
+					var gradColor =  Math.round(myBrightness[i]*multiplierSelector);
 					//ctx.shadowColor = "rgb("+ grad +", " + grad + ", " + grad +")";
 					var myYloc = 0 + 32;
 					var myXloc = i * 128;
@@ -76,7 +127,7 @@
 				}
 				
 				for(i=0; i<4; i++) {
-					var gradColor = myBrightness[4+i];
+					var gradColor =  Math.round(myBrightness[4+i]*multiplierSelector);
 					//ctx.shadowColor = "rgb("+ grad +", " + grad + ", " + grad +")";
 					var myYloc = 64 + 32;
 					var myXloc = i * 128 + 64;
@@ -98,7 +149,7 @@
 				}
 				
 				for(i=0; i<4; i++) {
-					var gradColor = myBrightness[8+i];
+					var gradColor =  Math.round(myBrightness[8+i]*multiplierSelector);
 					//ctx.shadowColor = "rgb("+ grad +", " + grad + ", " + grad +")";
 					var myYloc = 128 + 32;
 					var myXloc = i * 128;
@@ -120,7 +171,7 @@
 				}
 				
 				for(i=0; i<4; i++) {
-					var gradColor = myBrightness[12+i];
+					var gradColor =  Math.round(myBrightness[12+i]*multiplierSelector);
 					//ctx.shadowColor = "rgb("+ grad +", " + grad + ", " + grad +")";
 					var myYloc = 192 + 32;
 					var myXloc = i * 128 + 64;
@@ -176,6 +227,64 @@
 		}
 		
 		
+
+		Highcharts.setOptions({
+	        global: {
+	            useUTC: false
+	        }
+	    });
+
+		socket.on('latestSamples', function(incomingData){
+			console.log(incomingData);
+			socket.emit('messageFromClientToServer', "received: "+incomingData);
+
+	        $('#container').highcharts({
+	            chart: {
+	                type: 'spline',
+	                animation: Highcharts.svg, // don't animate in old IE
+	                marginRight: 10/*,
+	                 events: {
+	                    load: function () {
+	                        // set up the updating of the chart each second
+	                        var series = this.series[0];
+	                        setInterval(function () {
+	                            var x = (new Date()).getTime(), // current time
+	                                y = incomingData[0];
+	                            series.addPoint([x, y], true, true);
+	                        }, 1000);
+	                    }
+	                }*/
+	            },
+	            title: {
+	                text: 'Live random data'
+	            },
+	            xAxis: {
+	                title: {
+	                    text: 'Value'
+	                }
+	            },
+	            yAxis: {
+	                title: {
+	                    text: 'Value'
+	                },
+	                plotLines: [{
+	                    value: 0,
+	                    width: 1,
+	                    color: '#808080'
+	                }]
+	            },
+	            legend: {
+	                enabled: false
+	            },
+	            exporting: {
+	                enabled: false
+	            },
+	            series: [{
+	                name: 'Random data',
+	                data: incomingData
+	            }]
+	        });
+		});
 
 		
 		
