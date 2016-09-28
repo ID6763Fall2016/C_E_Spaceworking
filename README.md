@@ -2,14 +2,14 @@
 working code repo for Space Monitoring project for team redGuppy
 
 Hardware:
-Raspberry Pi 3 x 1
-Photo transistor light sensor x 16
-MCP 3008 Analog to Digital Converter x 2
+Raspberry Pi 3 x 1 <br/>
+Photo transistor light sensor x 16 <br/>
+MCP 3008 Analog to Digital Converter x 2 <br/>
 
 Software:
-Node.js
-Three.js
-Socket.io
-Tingo DB
-mcp-spi-adc library
+Node.js<br/>
+Three.js<br/>
+Socket.io<br/>
+Tingo DB<br/>
+mcp-spi-adc library<br/>
 
