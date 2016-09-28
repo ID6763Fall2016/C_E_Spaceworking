@@ -1,6 +1,8 @@
 # C_E_Spaceworking
 working code repo for Space Monitoring project for team redGuppy
 
+You will need the following hardwares and softwares to build Oculux: <br/>
+
 <b>Hardware:</b><br/>
 Raspberry Pi 3 x 1 <br/>
 Photo transistor light sensor x 16 <br/>
@@ -12,4 +14,6 @@ Three.js<br/>
 Socket.io<br/>
 Tingo DB<br/>
 mcp-spi-adc library<br/>
+
+The working code resides in the Node_Light_Sphere folder. After connecting the hardwares together and connecting raspberry pi to your laptop, You need to run the command "node test2MCP.js" in the folder location and open "localhost:8000" in your web broswer.
 
