@@ -1,39 +1,347 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<!-- The following code was created by Colin Freeman and Li, Xiongxin 2016 
+	The following code is designed to be used with Node JS to provide realtime data visualization
+	for light probes attached to a sphere.  We call this setup the Oculux.  More information can be gotten
+	at... https://github.com/ID6763Fall2016/C_E_Spaceworking/tree/master/Node_Light_Sphere
+	and https://github.com/ID6763Fall2016/C_E_Spaceworking/wiki  -->
 	<meta charset="UTF-8">
 	<title>360 degree light Probe</title>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.js"></script>
+	<!-- load the javascript to handle the socket connection from the Node server -->
 	<script src="/socket.io/socket.io.js"></script>
+	<!-- load three.js in order to deal with the 3d visualization -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r79/three.min.js"></script>
 </head>
-<body>
-	<canvas width="512" height="256" id="myCanvas"></canvas>
-	<h1>last 64 light samples over time</h1>
-		<div style="width: 50%">
-		<canvas id="tingoChart" height="300" width="512"></canvas>
-		</div>
+<body style="background: rgb(30,30,30)">
+	<!-- create a container for the three.js scene -->
+	<div id="container" style="position: absolute; left:0px; top:0px; width:100%; height:100%; z-index: -1;"></div>
+	<!-- create a container for the realtime canvas visualization of the light probes -->
+	<div id="realtimeElements" style="position: absolute; left: 30px; top: 5px; z-index: 1;">
+	<h1 style="font-family: 'Arial', Arial, Sans-serif;font-size: 24px; color:rgb(244,244,244)"> Realtime visualization of light probes </h1>
+	<!-- canvas to display the light probes on -->
+	<canvas width="512" height="256" id="myCanvas"  style="width: 100%; height: 100%;"></canvas>
+	<!-- a canvas drawn off screen that allows for a heat map style gradient to be applied to the visualization -->
+	<canvas width ="256" height="1" id="gradCanvas" style="position: absolute; left:-512px;"></canvas>
+	
+	</br>
+	<!-- A slider to control the brightness of the output and a button to toggle the heatmap on and off -->
+	<div style="display: inline-block; border-style: solid; border-width:1px; border-color: rgb(150,150,150); padding: 8px; background-color: rgb(200,200,200); width: 77%;"><label id="rangeText" for="rangeVal" style="position: relative; display: inline-block;font-family: 'Arial', Arial, Sans-serif;font-size: 12px; color:rgb(0,0,0)">Brightness</label><input type="range" id="myRange" name="rangeVal" style="position: relative; height:10px; width: 73%; top:3px; left: 5px; " min="0" max="4" value="1" step=".05" onchange="sliderChange(this.value)"></div><input type="button" id="heatMap" style="position: relative; left: 8px; width:18%; height: 38px; color: rgb(0,0,0); background-color: rgb(200,200,200);border-style: solid; border-width:1px; border-color: rgb(150,150,150);" onclick="toggleHeat()" value="Heat Map On"></button></div>
 
 </body>
+	<script>  
+		// create a canvas context for the heatmap gradient map
+		var grdctx;
+		var canvas = document.getElementById("gradCanvas");
+		// create a rainbow linear gradient to map the grayscale lightmap output to.
+		if (canvas.getContext) {    
+			var grdctx = canvas.getContext("2d");           
+			var gradient = grdctx.createLinearGradient(10, 0, 500, 0);  
+			gradient.addColorStop(0, 'blue');  
+			gradient.addColorStop(1/6, 'green');  
+			gradient.addColorStop(2/6, 'yellow');  
+			gradient.addColorStop(3/6, 'orange');  
+			gradient.addColorStop(4/6, 'red');  
+			gradient.addColorStop(5/6, 'violet');  
+			gradient.addColorStop(1, 'indigo');  
+			grdctx.fillStyle = gradient;
+			// the canvas only needs to be 256 pixels by 1 pixel in order to save time parsing each pixel
+			grdctx.fillRect(0, 0, 256, 1);  
+		}  
+	</script> 
 	<script>
-	
-		window.onload = function(){
-			initLineChart();
+		// a global array variable to contain the light reading for each of 16 light probes on the sphere
+		var myBrightness = [128, 30, 256, 128, 10, 20, 256, 40, 56, 10, 256, 200, 20, 128, 50, 256];
+		// a dummy variable to work with when scaling the light output with the slider control
+		var modBrightness = [];
+		// a variable for toggling the heatmap function
+		var heatOn = false;
+
+		// setup utility variables to hold values for dynamic global updates
+		var container = document.getElementById("container");
+		var width = window.innerWidth, height = window.innerHeight;
+		var size = 256;
+		var canvas = document.getElementById('myCanvas'),
+			ctxTxt = canvas.getContext('2d');
+			
+		// threejs object and scene variables
+		var camera, scene, renderer, geometry, texture, mesh;
+		var probe1, probe2, probe3, probe4, probe5, probe6, probe7, probe8, probe9, probe10, probe11, probe12, probe13, probe14, probe15, probe16;
+		var mprobe1, mprobe2, mprobe3, mprobe4, mprobe5, mprobe6, mprobe7, mprobe8, mprobe9, mprobe10, mprobe11, mprobe12, mprobe13, mprobe14, mprobe15, mprobe16;
+
+		// create the threejs renderer and scene
+		function init() {
+			// set the alpha option on the renderer to true in order to have the 3d objects appear composited on top of the html background elements
+			renderer = new THREE.WebGLRenderer( {alpha: true});
+			renderer.setSize(width, height);
+			renderer.setClearColor( 0x000000, 0 );
+			container.appendChild(renderer.domElement);
+			
+		  // create the scene
+		  scene = new THREE.Scene();
+		  
+		  // create a directional light for better shading on the scaling 3d light probe objects
+		  var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+			directionalLight.position.set( 0, 1, 0 );
+			scene.add( directionalLight );
+			
+			// create the camera and position it in order to have the 3d sphere appear offset below the realtime canvas
+			camera = new THREE.PerspectiveCamera(70, width / height, 1, 1000);
+			camera.position.z = 600;
+			camera.position.y = 400;
+			camera.rotation.x = -20 * Math.PI/180;
+			scene.add(camera);
+			
+			// create a texture from the realtime canvas in order to have it update on the 3d sphere
+			texture = new THREE.Texture(canvas);
+			var material = new THREE.MeshBasicMaterial({ map: texture });
+			geometry = new THREE.SphereGeometry( 200, 200, 200 );
+			
+			// add objects to represent each probe relative to its position on the oculux.  These can be scaled based on the light readings
+			probe1 = new THREE.BoxGeometry(1,10,10);
+			var colorMat1 = new THREE.MeshPhongMaterial({ color: 0x00FF00, shininess: 80, shading: THREE.FlatShading});
+			mprobe1 = new THREE.Mesh(probe1, colorMat1);
+			mprobe1.rotation.z = -56*Math.PI/180;
+			mprobe1.translateX(-200);
+			
+			probe2 = new THREE.BoxGeometry(1,10,10);
+			var colorMat2 = new THREE.MeshPhongMaterial({ color: 0x00FF00, shininess: 80, shading: THREE.FlatShading});
+			mprobe2 = new THREE.Mesh(probe2, colorMat2);
+			mprobe2.rotation.z = -56*Math.PI/180;
+			mprobe2.rotation.y = 90*Math.PI/180;
+			mprobe2.translateX(-200);
+			
+			probe3 = new THREE.BoxGeometry(1,10,10);
+			var colorMat3 = new THREE.MeshPhongMaterial({ color: 0x00FF00, shininess: 80, shading: THREE.FlatShading});
+			mprobe3 = new THREE.Mesh(probe3, colorMat3);
+			mprobe3.rotation.z = -56*Math.PI/180;
+			mprobe3.rotation.y = 180*Math.PI/180;
+			mprobe3.translateX(-200);
+			
+			probe4 = new THREE.BoxGeometry(1,10,10);
+			var colorMat4 = new THREE.MeshPhongMaterial({ color: 0x00FF00, shininess: 80, shading: THREE.FlatShading});
+			mprobe4 = new THREE.Mesh(probe4, colorMat4);
+			mprobe4.rotation.z = -56*Math.PI/180;
+			mprobe4.rotation.y = 270*Math.PI/180;
+			mprobe4.translateX(-200);
+			
+			probe5 = new THREE.BoxGeometry(1,10,10);
+			var colorMat5 = new THREE.MeshPhongMaterial({ color: 0x00FF00, shininess: 80, shading: THREE.FlatShading});
+			mprobe5 = new THREE.Mesh(probe5, colorMat5);
+			mprobe5.rotation.z = -28*Math.PI/180;
+			mprobe5.rotation.y = 45*Math.PI/180;
+			mprobe5.translateX(-200);
+			
+			probe6 = new THREE.BoxGeometry(1,10,10);
+			var colorMat6 = new THREE.MeshPhongMaterial({ color: 0x00FF00, shininess: 80, shading: THREE.FlatShading});
+			mprobe6 = new THREE.Mesh(probe6, colorMat6);
+			mprobe6.rotation.z = -28*Math.PI/180;
+			mprobe6.rotation.y = 135*Math.PI/180;
+			mprobe6.translateX(-200);
+			
+			probe7 = new THREE.BoxGeometry(1,10,10);
+			var colorMat7 = new THREE.MeshPhongMaterial({ color: 0x00FF00, shininess: 80, shading: THREE.FlatShading});
+			mprobe7 = new THREE.Mesh(probe7, colorMat7);
+			mprobe7.rotation.z = -28*Math.PI/180;
+			mprobe7.rotation.y = 225*Math.PI/180;
+			mprobe7.translateX(-200);
+			
+			probe8 = new THREE.BoxGeometry(1,10,10);
+			var colorMat8 = new THREE.MeshPhongMaterial({ color: 0x00FF00, shininess: 80, shading: THREE.FlatShading});
+			mprobe8 = new THREE.Mesh(probe8, colorMat8);
+			mprobe8.rotation.z = -28*Math.PI/180;
+			mprobe8.rotation.y = 315*Math.PI/180;
+			mprobe8.translateX(-200);
+			
+			probe9 = new THREE.BoxGeometry(1,10,10);
+			var colorMat9 = new THREE.MeshPhongMaterial({ color: 0x00FF00, shininess: 80, shading: THREE.FlatShading});
+			mprobe9 = new THREE.Mesh(probe9, colorMat9);
+			mprobe9.translateX(-200);
+			
+			probe10 = new THREE.BoxGeometry(1,10,10);
+			var colorMat10 = new THREE.MeshPhongMaterial({ color: 0x00FF00, shininess: 80, shading: THREE.FlatShading});
+			mprobe10 = new THREE.Mesh(probe10, colorMat10);
+			mprobe10.rotation.y = 90*Math.PI/180;
+			mprobe10.translateX(-200);
+			
+			probe11 = new THREE.BoxGeometry(1,10,10);
+			var colorMat11 = new THREE.MeshPhongMaterial({ color: 0x00FF00, shininess: 80, shading: THREE.FlatShading});
+			mprobe11 = new THREE.Mesh(probe11, colorMat11);
+			mprobe11.rotation.y = 180*Math.PI/180;
+			mprobe11.translateX(-200);
+			
+			probe12 = new THREE.BoxGeometry(1,10,10);
+			var colorMat12 = new THREE.MeshPhongMaterial({ color: 0x00FF00, shininess: 80, shading: THREE.FlatShading});
+			mprobe12 = new THREE.Mesh(probe12, colorMat12);
+			mprobe12.rotation.y = 270*Math.PI/180;
+			mprobe12.translateX(-200);
+			
+			probe13 = new THREE.BoxGeometry(1,10,10);
+			var colorMat13 = new THREE.MeshPhongMaterial({ color: 0x00FF00, shininess: 80, shading: THREE.FlatShading});
+			mprobe13 = new THREE.Mesh(probe13, colorMat13);
+			mprobe13.rotation.z = 28*Math.PI/180;
+			mprobe13.rotation.y = 45*Math.PI/180;
+			mprobe13.translateX(-200);
+			
+			probe14 = new THREE.BoxGeometry(1,10,10);
+			var colorMat14 = new THREE.MeshPhongMaterial({ color: 0x00FF00, shininess: 80, shading: THREE.FlatShading});
+			mprobe14 = new THREE.Mesh(probe14, colorMat14);
+			mprobe14.rotation.z = 28*Math.PI/180;
+			mprobe14.rotation.y = 135*Math.PI/180;
+			mprobe14.translateX(-200);
+			
+			probe15 = new THREE.BoxGeometry(1,10,10);
+			var colorMat15 = new THREE.MeshPhongMaterial({ color: 0x00FF00, shininess: 80, shading: THREE.FlatShading});
+			mprobe15 = new THREE.Mesh(probe15, colorMat15);
+			mprobe15.rotation.z = 28*Math.PI/180;
+			mprobe15.rotation.y = 225*Math.PI/180;
+			mprobe15.translateX(-200);
+			
+			probe16 = new THREE.BoxGeometry(1,10,10);
+			var colorMat16 = new THREE.MeshPhongMaterial({ color: 0x00FF00, shininess: 80, shading: THREE.FlatShading});
+			mprobe16 = new THREE.Mesh(probe16, colorMat16);
+			mprobe16.rotation.z = 28*Math.PI/180;
+			mprobe16.rotation.y = 315*Math.PI/180;
+			mprobe16.translateX(-200);
+			
+			// create the mesh for the sphere from the sphere object and the realtime canvas material
+			mesh = new THREE.Mesh( geometry, material );
+			
+			// add each probe to the sphere mesh as a child
+			mesh.add(mprobe1);
+			mesh.add(mprobe2);
+			mesh.add(mprobe3);
+			mesh.add(mprobe4);
+			mesh.add(mprobe5);
+			mesh.add(mprobe6);
+			mesh.add(mprobe7);
+			mesh.add(mprobe8);
+			mesh.add(mprobe9);
+			mesh.add(mprobe10);
+			mesh.add(mprobe11);
+			mesh.add(mprobe12);
+			mesh.add(mprobe13);
+			mesh.add(mprobe14);
+			mesh.add(mprobe15);
+			mesh.add(mprobe16);
+			
+			// add all of the objects to the scene
+			scene.add( mesh );
 		}
 		
-		var myBrightness = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+		// animate the material with the realtime input from the light probes and scale the probe objects on the sphere
+		function animate() {
+			requestAnimationFrame(animate);
+			texture.needsUpdate = true;
+			mesh.rotation.y -= 0.01;
+			mprobe1.scale.x = myBrightness[0];
+			mprobe2.scale.x = myBrightness[1];
+			mprobe3.scale.x = myBrightness[2];
+			mprobe4.scale.x = myBrightness[3];
+			mprobe5.scale.x = myBrightness[4];
+			mprobe6.scale.x = myBrightness[5];
+			mprobe7.scale.x = myBrightness[6];
+			mprobe8.scale.x = myBrightness[7];
+			mprobe9.scale.x = myBrightness[8];
+			mprobe10.scale.x = myBrightness[9];
+			mprobe11.scale.x = myBrightness[10];
+			mprobe12.scale.x = myBrightness[11];
+			mprobe13.scale.x = myBrightness[12];
+			mprobe14.scale.x = myBrightness[13];
+			mprobe15.scale.x = myBrightness[14];
+			mprobe16.scale.x = myBrightness[15];
+			renderer.render(scene, camera);
+		}
+		init();
+		animate();
 		
+		// EVENTS
+		window.addEventListener( 'resize', onWindowResize, false );
+		
+		// resize the threejs canvas when the window is resized and update the camera matrix
+		function onWindowResize() {
+				var canvasWidth = window.innerWidth;
+				var canvasHeight = window.innerHeight;
+				renderer.setSize( canvasWidth, canvasHeight );
+				camera.aspect = canvasWidth / canvasHeight;
+				camera.updateProjectionMatrix();
+		}
+
+	// update the modbrightness array with the data from the myBrightness array on start
+	for (var i=0; i < myBrightness.length; i ++){
+		modBrightness.push(myBrightness[i]);
+	}
+	
+	// toggle the heatmap variable based on the button click
+	function toggleHeat() {
+		if(heatOn == false) {
+			heatOn = true;
+			document.getElementById("heatMap").value = "Heat Map Off"
+		} else {
+			heatOn = false;
+			document.getElementById("heatMap").value = "Heat Map On"
+		}
+		redrawCanvas();
+	}
+	
+	// update the light probe output based on the slider multiplier
+	function sliderChange (value) {
+		for (var i=0; i < myBrightness.length; i ++){
+			modBrightness[i] = myBrightness[i];
+		}
+		document.getElementById('myRange').innerHTML = value;
+		for(var i=0; i < myBrightness.length; i++) {
+			modBrightness[i] = Math.round(modBrightness[i]*value);
+		}
+		redrawCanvas();
+	}
+
+	// function to remap the grayscale canvas with the heatmap canvas colors
+		function mapGrad () {
+			var myCtxImg = ctx.getImageData(0,0,512,256);
+			var myGrdImg = grdctx.getImageData(0,0,256,1);
+			if(heatOn == true) {
+				for (var i=0; i < myCtxImg.data.length; i+=4) {
+						var grayValue = myCtxImg.data[i];
+						var valueR = myGrdImg.data[4*grayValue];
+						var valueG = myGrdImg.data[4*grayValue+1];
+						var valueB = myGrdImg.data[4*grayValue+2];
+						var valueA = myGrdImg.data[4*grayValue+3];
+						myCtxImg.data[i] = valueR;
+						myCtxImg.data[i+1] = valueG;
+						myCtxImg.data[i+2] = valueB;
+						myCtxImg.data[i+3] = valueA;
+				}
+			} 
+
+			ctx.putImageData(myCtxImg,0,0);
+		}
+
+		// open a socket to the server when the page is loaded
 		var socket = io();
 		
+		// deal with socket messages from the server
 		socket.on('messageFromServerToClient', function(incomingData) {
 			console.log(incomingData);
 			
+			// update mybrightness with the new light probe data
 			myBrightness = incomingData;
+			
+			// get the multiplier from the slider control
+			var myValue = document.getElementById("myRange").value;
+			
+			// modify the light input with the slider control value
+			sliderChange(myValue);
+			
+			// notify the server that the message was received
 			socket.emit('messageFromClientToServer', "received: "+incomingData);
 			
+			// redraw the canvas
 			redrawCanvas();
 		})
 		
 		
+		// variables for drawing the light probe values on the realtime canvas
 		var brushCanvas = document.getElementById("myCanvas");
 		var brushSize = 64;
 		var brushBlurSize = 128;
@@ -46,16 +354,19 @@
 		var ctx = brushCanvas.getContext('2d');
 
 		var i;
-		
-		ctx.beginPath();
-		ctx.rect(0,0, 512, 256);
-		ctx.fillStyle = "black";
-		ctx.fill();
-		
+
+		// redraw the canvas with new lightprobe data.  There are multiple for loops in order to deal with the offset array of probes on the physical sphere
 		function redrawCanvas(){
+		
+			ctx.beginPath();
+			ctx.rect(0,0, 512, 256);
+			ctx.fillStyle = "black";
+			ctx.fill();
+		
+		// draw the first row of four probes with spherical gradients that are transparent at the edges.  This row is offset 32 pixels vertically to start the gradient 256/4 = 64 divided by 2 = 32 pixels to center the sphere on the 4x4 (16 probes on the sphere) grid of the canvas
 			for(i=0; i<4; i++) {
-					var gradColor = myBrightness[i];
-					//ctx.shadowColor = "rgb("+ grad +", " + grad + ", " + grad +")";
+					var gradColor = modBrightness[i];
+
 					var myYloc = 0 + 32;
 					var myXloc = i * 128;
 					
@@ -75,8 +386,26 @@
 					ctx.fill();
 				}
 				
+				// fith circle to smooth corners
+				var gradColor = modBrightness[0];
+				var grd = ctx.createRadialGradient(512+128, 32, 1, 512+128, 32, brushBlurSize);
+					grd.addColorStop(0,"rgba("+ gradColor +", " + gradColor + ", " + gradColor +", " + "256)");
+					grd.addColorStop(1,"rgba("+ gradColor +", " + gradColor + ", " + gradColor +", " + "0)");
+					
+				// Fill with gradient
+					ctx.fillStyle=grd;
+
+					// draw circle in the left to the canvas
+					
+					ctx.beginPath();
+					ctx.arc(512+128, r, d, 32, Math.PI * 2, true);
+					ctx.closePath();
+
+					ctx.fill();
+				
+				// draw the second row of four probes with spherical gradients that are transparent at the edges.  This row is offset by 512/4 or 128 pixels horizontally to account for the offset of the second row of probes on the physical sphere.
 				for(i=0; i<4; i++) {
-					var gradColor = myBrightness[4+i];
+					var gradColor = modBrightness[4+i];
 					//ctx.shadowColor = "rgb("+ grad +", " + grad + ", " + grad +")";
 					var myYloc = 64 + 32;
 					var myXloc = i * 128 + 64;
@@ -97,8 +426,26 @@
 					ctx.fill();
 				}
 				
+				// fifth circle
+				var gradColor = modBrightness[4];
+				var grd = ctx.createRadialGradient(512+128, 96, 1, 512+128, 96, brushBlurSize);
+					grd.addColorStop(0,"rgba("+ gradColor +", " + gradColor + ", " + gradColor +", " + "256)");
+					grd.addColorStop(1,"rgba("+ gradColor +", " + gradColor + ", " + gradColor +", " + "0)");
+					
+				// Fill with gradient
+					ctx.fillStyle=grd;
+
+					// draw circle in the left to the canvas
+					
+					ctx.beginPath();
+					ctx.arc(512+128, r, d, 96, Math.PI * 2, true);
+					ctx.closePath();
+
+					ctx.fill();
+				
+				// draw the third row of four probes with spherical gradients that are transparent at the edges.  This row is aligned with the first row vertically as it is on the physical sphere
 				for(i=0; i<4; i++) {
-					var gradColor = myBrightness[8+i];
+					var gradColor = modBrightness[8+i];
 					//ctx.shadowColor = "rgb("+ grad +", " + grad + ", " + grad +")";
 					var myYloc = 128 + 32;
 					var myXloc = i * 128;
@@ -119,8 +466,27 @@
 					ctx.fill();
 				}
 				
+				// fifth circle
+				var gradColor = modBrightness[8];
+				var grd = ctx.createRadialGradient(512+128, 160, 1, 512+128, 160, brushBlurSize);
+					grd.addColorStop(0,"rgba("+ gradColor +", " + gradColor + ", " + gradColor +", " + "256)");
+					grd.addColorStop(1,"rgba("+ gradColor +", " + gradColor + ", " + gradColor +", " + "0)");
+					
+				// Fill with gradient
+					ctx.fillStyle=grd;
+
+					// draw circle in the left to the canvas
+					
+					ctx.beginPath();
+					ctx.arc(512+128, r, d, 160, Math.PI * 2, true);
+					ctx.closePath();
+
+					ctx.fill();
+				
+				// draw the final row of four probes offset horizontally by 128 pixels
+				
 				for(i=0; i<4; i++) {
-					var gradColor = myBrightness[12+i];
+					var gradColor = modBrightness[12+i];
 					//ctx.shadowColor = "rgb("+ grad +", " + grad + ", " + grad +")";
 					var myYloc = 192 + 32;
 					var myXloc = i * 128 + 64;
@@ -140,43 +506,29 @@
 
 					ctx.fill();
 				}
-		}
-		
-		var lineChartData = {
-			labels: Array(64).fill(0),
-			datasets: [
-			{
-			label: "Light Samples over Time",
-			fillColor: "rgba(220,220,220,0.2)",
-			strokeColor: "rgba(220,220,220,1)",
-			pointColor: "rgba(220,220,220,1)",
-			pointStrokeColor: "#fff",
-			pointHighlightFill: "#fff",
-			pointHightlightStroke: "rgba(220,220,220,1)",
-			data: Array(64).fill(0)
-			}
-			]
-			}
-		
-		socket.on('latestSamples', function(incomingData){
-			console.log(incomingData);
-			socket.emit('messageFromClientToServer', "received: "+incomingData);
-			lineChartData.datasets[0].data = incomingData;
-			initLineChart();
-		});
-		
-		var initLineChart = function() {
-			var options = {
-				animation : false,
-				responsive : true
-			};
-			var canvas = document.getElementById("tingoChart");
-			var ctx = canvas.getContext("2d");
-			window.myLineChart = new Chart(ctx).Line(lineChartData, options );
-		}
-		
-		
+				
+				// fifth circle
+				var gradColor = modBrightness[12];
+				var grd = ctx.createRadialGradient(512+128, 224, 1, 512+128, 224, brushBlurSize);
+					grd.addColorStop(0,"rgba("+ gradColor +", " + gradColor + ", " + gradColor +", " + "256)");
+					grd.addColorStop(1,"rgba("+ gradColor +", " + gradColor + ", " + gradColor +", " + "0)");
+					
+				// Fill with gradient
+					ctx.fillStyle=grd;
 
+					// draw circle in the left to the canvas
+					
+					ctx.beginPath();
+					ctx.arc(512+128, r, d, 224, Math.PI * 2, true);
+					ctx.closePath();
+
+					ctx.fill();
+				
+				mapGrad();
+		}
+
+		redrawCanvas();
+		
 		
 		
 	</script>
