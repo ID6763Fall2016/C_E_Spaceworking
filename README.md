@@ -2,7 +2,7 @@
 working code repo for Space Monitoring project for team redGuppy
 
 You will need the following hardware and software to build the Oculux: <br/>
-<img src="https://github.com/ID6763Fall2016/C_E_Spaceworking/blob/master/Node_Light_Sphere/Oculux%20Fritz.jpg" style="width:512px; height:512px"></img>
+<img src="https://github.com/ID6763Fall2016/C_E_Spaceworking/blob/master/Node_Light_Sphere/Oculux%20Fritz.jpg" style="width:40%; height:40%"></img>
 <b>Hardware:</b><br/>
 Raspberry Pi 3 x 1 <br/>
 Photo transistor light sensor x 16 <br/>
